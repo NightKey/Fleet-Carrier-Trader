@@ -6,6 +6,9 @@ class Commoditie():
         self.min_buy = min_buy
         self.max_sell = max_sell
         self.min_sell = min_sell
+
+    def __str__(self):
+        return self.name
     
 class Station():
     def __init__(self, name, system_id, max_landing, has_docking, has_commodities):
@@ -26,5 +29,8 @@ class System():
         self.population = population
         self.security = security
     
+    def Distance(self, other):
+        return round(self.coord.dist(other.coord), 2)
+
     def __str__(self):
         return self.name
