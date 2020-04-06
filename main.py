@@ -127,10 +127,10 @@ def reader(max):
         except:
             print('Use only numbers!')
 
-def search_system(inp=None):
+def search_system(inp=None, first=True):
     import vector
-    clear()
-    print('=====Search for system=====')
+    if first: clear()
+    if first: print('=====Search for system=====')
     if inp == None:
         inp = input("Type in the system's name: ")
     options = []
@@ -151,20 +151,22 @@ def search_system(inp=None):
                 if Systems[station.system_id] == options[ansv - 1]:
                     co = ('has' if station.has_commodities else "doesn't have")
                     print(f"{station.name} max pad: {station.max_landing} and {co} commodities market.")
+            return options[ansv - 1]
     elif len(options) == 1:
         print(f"Stations in {options[0]}")
         for station in Stations.values():
             if Systems[station.system_id] == options[0]:
                 co = ('has' if station.has_commodities else "doesn't have")
                 print(f"{station.name} max pad: {station.max_landing} and {co} commodities market.")
+        return options[0]
     else:
         print("No system found!")
     input('...Press return to return...')
 
-def search_station(inp=None):
+def search_station(inp=None, first=True):
     import vector
-    clear()
-    print('=====Search for station=====')
+    if first: clear()
+    if first: print('=====Search for station=====')
     if inp == None:
         inp = input("Type in the station's name: ")
     for station in Stations.values():
@@ -172,44 +174,67 @@ def search_station(inp=None):
             print(f"The {station.name} station is in the {Systems[station.system_id]} system, that is {Systems[station.system_id].Distance(vector.vector(0,0,0))} ly's away from Sol.")
     input('...Press return to return...')
 
-def search_for_lowest():
+def search_for_lowest(starting=None, first=True):
     """
                0       1         2          3       4         5          6         7
     Listings: ID, StationID, CommodityID, Suply, BuyPrice, SellPrice, Demand, CollectedAt
     """
+    if first: clear()
+    if first: print("=====Commodity search=====")
     id = None
     global loading
-    global Commodities
+    _Commodities = Commodities
     loading = True
-    id = 1
+    id = None
     while True:
-        for key, item in Commodities.items():
-            try:
-                if item.min_buy < Commodities[id].min_buy and item.max_sell > Commodities[id].max_sell and item.max_sell > 8000:
-                    id = key
-            except:
-                pass
-        write(f"Best commoditie: {Commodities[id].name}")
-        best = Commodities[id]
+        if _Commodities == {}:
+            write("No resoults found!")
+            break
+        for key, item in _Commodities.items():
+            if id == None or (item.min_buy < _Commodities[id].min_buy and item.max_sell > _Commodities[id].max_sell and item.max_sell > 8000) and (item.min_buy != -1 and item.max_sell != -1):
+                id = key
+        write(f"Best commoditie: {_Commodities[id].name}")
+        best = _Commodities[id]
         best_buy = []
         best_sell = []
         for item in Listings:
             if int(item[2]) == int(id):
-                if int(item[4]) < int(best.avg_sell) and int(item[3]) >= 25000:
-                    best_buy = item
-                elif int(item[5]) == int(best.max_sell):
-                    best_sell = item
-        write(f'The best buy is at {Stations[int(best_buy[1])]} in the {Systems[Stations[int(best_buy[1])].system_id]} system. It has {best_buy[3]} t suply.')
-        write(f'The best sell is at {Stations[int(best_sell[1])]} in the {Systems[Stations[int(best_sell[1])].system_id]} system. It has {best_sell[6]} t demand')
+                if int(item[4]) < int(best.avg_price) and int(item[3]) >= 25000:
+                    if best_buy == [] or int(item[4]) < int(best_buy[4]):
+                        if starting == None or starting.Distance(Systems[Stations[int(item[1])].system_id]):
+                            best_buy = item
+                elif int(item[5]) > int(best.avg_price) and int(item[6]) >= 25000:
+                    if best_sell == [] or int(item[5]) > int(best_sell[5]):
+                        if starting == None or starting.Distance(Systems[Stations[int(item[1])].system_id]):
+                            best_sell = item
+        if best_buy == [] or best_sell == []:
+            del _Commodities[id]
+            id = None
+            continue
+        sell_system = Systems[Stations[int(best_sell[1])].system_id]
+        buy_system = Systems[Stations[int(best_buy[1])].system_id]
+        write(f"The best buy is at '{Stations[int(best_buy[1])]}' in the '{buy_system}' system. It has {best_buy[3]} t suply.")
+        write(f"The best sell is at '{Stations[int(best_sell[1])]}' in the '{sell_system}' system. It has {best_sell[6]} t demand")
         loading = False
-        write(f"The distance between the two system is {Systems[int(Stations[int(best_sell[1])].system_id)].Distance(Systems[int(Stations[int(best_buy[1])].system_id)])}")
-        write(f"Buiing price: {best_buy[4]}")
+        write(f"The distance between the two system is {sell_system.Distance(buy_system)}")
+        write(f"Buying price: {best_buy[4]}")
         write(f"Selling price: {best_sell[5]}")
-        write(f"Difference: {int(best_sell[5]) - int(best_buy[4])}")
+        write(f"Profit/T: {int(best_sell[5]) - int(best_buy[4])}")
         write(f"Profit at max cargo: {(int(best_sell[5]) - int(best_buy[4])) * 25000}")
         break
+    del _Commodities
     input('...Press return to return...')
 
+
+def search_with_starting():
+    clear()
+    print("=====Searching for best with starting system=====")
+    while True:
+        starting = search_system(first=False)
+        if starting == []:
+            continue
+        search_for_lowest(starting=starting, first=False)
+        break
 
 def comparer(fix, usrinp, perc):
     good = 0
@@ -256,7 +281,7 @@ def test():
     print(f"Total runtime: {end-start}")
     input('...Press return to return to the main menu...')
 
-functions = {"Search system":search_system, "Search station":search_station, "Search for best commoditie":search_for_lowest}
+functions = {"Search system":search_system, "Search station":search_station, "Search for best commoditie":search_for_lowest, "Search for best, with starting location":search_with_starting}
 
 if __name__=='__main__':
     main()

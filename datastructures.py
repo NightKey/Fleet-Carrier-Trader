@@ -1,12 +1,12 @@
 class Commoditie():
-    def __init__(self, name, is_rare, max_buy, max_sell, min_buy, min_sell, avg_sell):
+    def __init__(self, name, is_rare, max_buy, max_sell, min_buy, min_sell, avg_price):
         self.name = name
         self.is_rare = bool(is_rare)
-        self.max_buy = max_buy
-        self.min_buy = min_buy
-        self.max_sell = max_sell
-        self.min_sell = min_sell
-        self.avg_sell = avg_sell
+        self.max_buy = int(max_buy or -1)
+        self.min_buy = int(min_buy or -1)
+        self.max_sell = int(max_sell or -1)
+        self.min_sell = int(min_sell or -1)
+        self.avg_price = int(avg_price or -1)
 
     def __str__(self):
         return self.name
