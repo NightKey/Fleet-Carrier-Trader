@@ -91,7 +91,7 @@ def commodities():
     tmp = get_jsons('commodities.json')
     write('Commodities downloaded.')
     for i in tmp:
-        Commodities[i['id']] = Commoditie(i['name'], i['is_rare'], i['max_buy_price'], i['max_sell_price'], i['min_buy_price'], i['min_sell_price'])
+        Commodities[i['id']] = Commoditie(i['name'], i['is_rare'], i['max_buy_price'], i['max_sell_price'], i['min_buy_price'], i['min_sell_price'], i['average_price'])
     write('Commodities finished.')
     del tmp
 
@@ -185,7 +185,7 @@ def search_for_lowest():
     while True:
         for key, item in Commodities.items():
             try:
-                if item.min_buy < Commodities[id].min_buy and item.max_sell > Commodities[id].max_sell:
+                if item.min_buy < Commodities[id].min_buy and item.max_sell > Commodities[id].max_sell and item.max_sell > 8000:
                     id = key
             except:
                 pass
@@ -195,7 +195,7 @@ def search_for_lowest():
         best_sell = []
         for item in Listings:
             if int(item[2]) == int(id):
-                if int(item[4]) == int(best.min_buy):
+                if int(item[4]) < int(best.avg_sell) and int(item[3]) >= 25000:
                     best_buy = item
                 elif int(item[5]) == int(best.max_sell):
                     best_sell = item
@@ -203,8 +203,10 @@ def search_for_lowest():
         write(f'The best sell is at {Stations[int(best_sell[1])]} in the {Systems[Stations[int(best_sell[1])].system_id]} system. It has {best_sell[6]} t demand')
         loading = False
         write(f"The distance between the two system is {Systems[int(Stations[int(best_sell[1])].system_id)].Distance(Systems[int(Stations[int(best_buy[1])].system_id)])}")
-        write(f"Min sell: {Commodities[id].min_buy}")
-        write(f"Max buy: {Commodities[id].max_sell}")
+        write(f"Buiing price: {best_buy[4]}")
+        write(f"Selling price: {best_sell[5]}")
+        write(f"Difference: {int(best_sell[5]) - int(best_buy[4])}")
+        write(f"Profit at max cargo: {(int(best_sell[5]) - int(best_buy[4])) * 25000}")
         break
     input('...Press return to return...')
 
@@ -249,6 +251,7 @@ def test():
     print(f"Commodity_count: {len(Commodities)}")
     print(f"Listing_count: {len(Listings)}")
     print(f'{Stations[5611]} is in {Systems[Stations[5611].system_id]}')
+    search_for_lowest()
     end = datetime.now()
     print(f"Total runtime: {end-start}")
     input('...Press return to return to the main menu...')
